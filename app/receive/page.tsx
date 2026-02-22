@@ -29,12 +29,13 @@ export default function ReceivePage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setSubmitting(true);
     try {
-      const formData = new FormData(e.currentTarget);
+      const formData = new FormData(form);
       const result = await receiveInventory(formData);
       toast.success(`Received ${formData.get('quantity')} boxes!`);
-      e.currentTarget.reset();
+      form.reset();
     } catch (err: any) {
       toast.error('Failed', { description: err.message });
     } finally {

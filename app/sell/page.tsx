@@ -28,14 +28,15 @@ export default function SellPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setSubmitting(true);
     try {
-      const formData = new FormData(e.currentTarget);
+      const formData = new FormData(form);
       formData.set('unitType', unitType);
       const result = await recordSale(formData);
       setLastSale({ totalPrice: result.totalPrice });
       toast.success(`Sale recorded: $${result.totalPrice.toFixed(2)}`);
-      e.currentTarget.reset();
+      form.reset();
     } catch (err: any) {
       toast.error('Failed', { description: err.message });
     } finally {

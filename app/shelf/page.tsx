@@ -31,14 +31,15 @@ export default function ShelfPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setSubmitting(true);
     try {
-      const formData = new FormData(e.currentTarget);
+      const formData = new FormData(form);
       formData.set('action', mode === 'put' ? 'PUT_ON_SHELF' : 'TAKE_OFF_SHELF');
       formData.set('unitType', unitType);
       await transferInventory(formData);
       toast.success(mode === 'put' ? 'Put on shelf!' : 'Taken off shelf!');
-      e.currentTarget.reset();
+      form.reset();
     } catch (err: any) {
       toast.error('Failed', { description: err.message });
     } finally {
