@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────────
+
+enum UnitType {
+  BOX
+  PACK
+}
+
+enum LocationType {
+  STORAGE
+  SHELF
+  TRUCK
+  STORE
+}
+
+enum MovementAction {
+  RECEIVE
+  PUT_ON_SHELF
+  TAKE_OFF_SHELF
+  DELIVER_TO_STORE
+  RETURN_FROM_STORE
+  CONVERT_BOX_TO_PACKS
+  SALE_RETAIL_PACK
+  SALE_RETAIL_BOX
+  ADJUSTMENT
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum AlertType {
+  NEGATIVE_INVENTORY
+  SHRINKAGE_DETECTED
+  RECONCILIATION_MISMATCH
+  LOW_STOCK
+  PAYMENT_OVERDUE
+}
+
+// ──────────────────────────────────────────
+// MODELS
+// ──────────────────────────────────────────
+
+model Product {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  variant     String?
+  sku         String   @unique
+  packsPerBox Int      @default(24) @map("packs_per_box")
+  isActive    Boolean  @default(true) @map("is_active")
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  barcodes       Barcode[]
+  pricing        ProductPricing?
+  movements      Movement[]
+  storeCounts    StoreCount[]
+  alerts         Alert[]
+  storeOverrides StorePriceOverride[]
+
+  @@map("products")
+}
+
+model Barcode {
+  id            String   @id @default(uuid()) @db.Uuid
+  productId     String   @map("product_id") @db.Uuid
+  barcodeValue  String   @unique @map("barcode_value")
+  unitType      UnitType @map("unit_type")
+  barcodeFormat String   @default("UPC_A") @map("barcode_format")
+  label         String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([barcodeValue])
+  @@index([productId])
+  @@map("barcodes")
+}
+
+model Location {
+  id           String       @id @default(uuid()) @db.Uuid
+  name         String
+  locationType LocationType @map("location_type")
+  storeId      String?      @map("store_id") @db.Uuid
+  parentId     String?      @map("parent_id") @db.Uuid
+  isActive     Boolean      @default(true) @map("is_active")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  store    Store?    @relation(fields: [storeId], references: [id])
+  parent   Location? @relation("LocationHierarchy", fields: [parentId], references: [id])
+  children Location[] @relation("LocationHierarchy")
+
+  movementsFrom Movement[] @relation("MovementFrom")
+  movementsTo   Movement[] @relation("MovementTo")
+  alerts        Alert[]
+
+  @@index([locationType])
+  @@map("locations")
+}
+
+model Store {
+  id                 String    @id @default(uuid()) @db.Uuid
+  name               String
+  contactName        String?   @map("contact_name")
+  contactPhone       String?   @map("contact_phone")
+  address            String?
+  nextCollectionDate DateTime? @map("next_collection_date") @db.Date
+  isActive           Boolean   @default(true) @map("is_active")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  locations      Location[]
+  movements      Movement[]
+  storeCounts    StoreCount[]
+  storePayments  StorePayment[]
+  priceOverrides StorePriceOverride[]
+  alerts         Alert[]
+
+  @@map("stores")
+}
+
+model Vendor {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  contactName  String?  @map("contact_name")
+  contactPhone String?  @map("contact_phone")
+  contactEmail String?  @map("contact_email")
+  notes        String?
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  movements Movement[]
+
+  @@map("vendors")
+}
+
+model ProductPricing {
+  id                   String   @id @default(uuid()) @db.Uuid
+  productId            String   @unique @map("product_id") @db.Uuid
+  costPerBox           Decimal  @map("cost_per_box") @db.Decimal(10, 2)
+  retailPricePerPack   Decimal  @map("retail_price_per_pack") @db.Decimal(10, 2)
+  retailPricePerBox    Decimal  @map("retail_price_per_box") @db.Decimal(10, 2)
+  wholesalePricePerBox Decimal  @map("wholesale_price_per_box") @db.Decimal(10, 2)
+  effectiveFrom        DateTime @default(now()) @map("effective_from") @db.Date
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("product_pricing")
+}
+
+model StorePriceOverride {
+  id                   String   @id @default(uuid()) @db.Uuid
+  storeId              String   @map("store_id") @db.Uuid
+  productId            String   @map("product_id") @db.Uuid
+  wholesalePricePerBox Decimal  @map("wholesale_price_per_box") @db.Decimal(10, 2)
+  effectiveFrom        DateTime @default(now()) @map("effective_from") @db.Date
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  store   Store   @relation(fields: [storeId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([storeId, productId])
+  @@map("store_price_overrides")
+}
+
+model Movement {
+  id               String         @id @default(uuid()) @db.Uuid
+  action           MovementAction
+  productId        String         @map("product_id") @db.Uuid
+  unitType         UnitType       @map("unit_type")
+  quantity         Int
+  fromLocationId   String?        @map("from_location_id") @db.Uuid
+  toLocationId     String?        @map("to_location_id") @db.Uuid
+  vendorId         String?        @map("vendor_id") @db.Uuid
+  storeId          String?        @map("store_id") @db.Uuid
+  costSnapshot     Decimal?       @map("cost_snapshot") @db.Decimal(10, 2)
+  priceSnapshot    Decimal?       @map("price_snapshot") @db.Decimal(10, 2)
+
+  linkedMovementId String? @map("linked_movement_id") @db.Uuid
+  adjustmentReason String? @map("adjustment_reason")
+  approvedBy       String? @map("approved_by")
+
+  performedBy    String   @map("performed_by")
+  performedAt    DateTime @default(now()) @map("performed_at") @db.Timestamptz
+  notes          String?
+  barcodeScanned String?  @map("barcode_scanned")
+
+  isReversal   Boolean @default(false) @map("is_reversal")
+  reversesId   String? @map("reverses_id") @db.Uuid
+  reversedById String? @map("reversed_by_id") @db.Uuid
+
+  product      Product   @relation(fields: [productId], references: [id])
+  fromLocation Location? @relation("MovementFrom", fields: [fromLocationId], references: [id])
+  toLocation   Location? @relation("MovementTo", fields: [toLocationId], references: [id])
+  vendor       Vendor?   @relation(fields: [vendorId], references: [id])
+  store        Store?    @relation(fields: [storeId], references: [id])
+
+  linkedMovement   Movement?  @relation("LinkedMovements", fields: [linkedMovementId], references: [id])
+  linkedBy         Movement[] @relation("LinkedMovements")
+  reversesMovement Movement?  @relation("ReversalChain", fields: [reversesId], references: [id])
+  reversedBy       Movement[] @relation("ReversalChain")
+
+  @@index([productId])
+  @@index([action])
+  @@index([fromLocationId])
+  @@index([toLocationId])
+  @@index([storeId])
+  @@index([performedAt])
+  @@index([performedBy])
+  @@map("movements")
+}
+
+model StoreCount {
+  id             String   @id @default(uuid()) @db.Uuid
+  storeId        String   @map("store_id") @db.Uuid
+  productId      String   @map("product_id") @db.Uuid
+  countDate      DateTime @map("count_date") @db.Date
+  boxesRemaining Int      @map("boxes_remaining")
+  countedBy      String   @map("counted_by")
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  store   Store   @relation(fields: [storeId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([storeId, countDate])
+  @@index([productId])
+  @@map("store_counts")
+}
+
+model StorePayment {
+  id            String   @id @default(uuid()) @db.Uuid
+  storeId       String   @map("store_id") @db.Uuid
+  amount        Decimal  @db.Decimal(10, 2)
+  paymentDate   DateTime @map("payment_date") @db.Date
+  paymentMethod String?  @map("payment_method")
+  collectedBy   String   @map("collected_by")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+  @@index([paymentDate])
+  @@map("store_payments")
+}
+
+model Alert {
+  id             String      @id @default(uuid()) @db.Uuid
+  alertType      AlertType   @map("alert_type")
+  severity       String      @default("WARNING")
+  title          String
+  description    String?
+  productId      String?     @map("product_id") @db.Uuid
+  locationId     String?     @map("location_id") @db.Uuid
+  storeId        String?     @map("store_id") @db.Uuid
+  status         AlertStatus @default(OPEN)
+  acknowledgedBy String?     @map("acknowledged_by")
+  resolvedBy     String?     @map("resolved_by")
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  resolvedAt     DateTime?   @map("resolved_at") @db.Timestamptz
+
+  product  Product?  @relation(fields: [productId], references: [id])
+  location Location? @relation(fields: [locationId], references: [id])
+  store    Store?    @relation(fields: [storeId], references: [id])
+
+  @@index([status])
+  @@index([alertType])
+  @@map("alerts")
+}
