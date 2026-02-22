@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -81,3 +82,4 @@ export default async function LocationsPage() {
     </div>
   );
 }
+

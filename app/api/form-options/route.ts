@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
@@ -36,3 +37,4 @@ export async function GET() {
     storeLocations: allLocations.filter((l) => l.locationType === 'STORE'),
   });
 }
+

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { runDailyAlertChecks } from '@/lib/alerts';
 
@@ -23,3 +24,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }
+

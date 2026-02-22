@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/db';
 import { findNegativeInventory } from '@/lib/inventory';
 import Link from 'next/link';
@@ -124,3 +125,4 @@ export default async function ShrinkageDashboard() {
     </div>
   );
 }
+

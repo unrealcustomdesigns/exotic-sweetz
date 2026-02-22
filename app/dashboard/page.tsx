@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/db';
 import { getStoreBalance } from '@/actions/stores';
 import { getInventoryByLocationType } from '@/lib/inventory';
@@ -166,3 +167,4 @@ export default async function DashboardPage() {
     </div>
   );
 }
+

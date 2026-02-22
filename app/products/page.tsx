@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 import Link from 'next/link';
@@ -84,3 +85,4 @@ export default async function ProductsPage() {
     </div>
   );
 }
+
