@@ -3,6 +3,7 @@ import { getAuthUser } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { RegisterBarcodeForm } from './RegisterBarcodeForm';
+import { DeactivateProductButton } from './DeactivateProductButton';
 import { Prisma } from '@prisma/client';
 
 export default async function ProductDetailPage({
@@ -176,6 +177,14 @@ export default async function ProductDetailPage({
           )}
         </div>
       </div>
+      {/* Deactivate / Reactivate — Manager only */}
+      {isManager && (
+        <DeactivateProductButton
+          productId={product.id}
+          productName={`${product.name}${product.variant ? ` (${product.variant})` : ''}`}
+          isActive={product.isActive}
+        />
+      )}
     </div>
   );
 }

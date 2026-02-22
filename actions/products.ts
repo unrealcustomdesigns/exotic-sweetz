@@ -122,6 +122,42 @@ export async function registerBarcode(formData: FormData) {
 }
 
 // ──────────────────────────────────────────
+// DEACTIVATE PRODUCT — Manager only (soft delete)
+// ──────────────────────────────────────────
+
+export async function deactivateProduct(productId: string) {
+  await requireManager();
+
+  if (!productId) throw new Error('Product ID required');
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: { isActive: false },
+  });
+
+  revalidatePath('/products');
+  return { success: true };
+}
+
+// ──────────────────────────────────────────
+// REACTIVATE PRODUCT — Manager only
+// ──────────────────────────────────────────
+
+export async function reactivateProduct(productId: string) {
+  await requireManager();
+
+  if (!productId) throw new Error('Product ID required');
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: { isActive: true },
+  });
+
+  revalidatePath('/products');
+  return { success: true };
+}
+
+// ──────────────────────────────────────────
 // GET LOCATIONS — for dropdowns
 // ──────────────────────────────────────────
 
