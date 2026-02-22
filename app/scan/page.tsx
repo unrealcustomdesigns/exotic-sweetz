@@ -329,10 +329,10 @@ export default function ScanPage() {
             <button
               onClick={handleSubmit}
               disabled={
-                submitting ||
-                (needsFrom && !fromLocationId) ||
-                (needsTo && !toLocationId)
-              }
+  submitting ||
+  !!(needsFrom && !fromLocationId) ||
+  !!(needsTo && !toLocationId)
+}
               className="btn-primary flex-1"
             >
               {submitting ? 'Saving...' : 'Confirm'}
