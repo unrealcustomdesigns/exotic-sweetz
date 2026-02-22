@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 import Link from 'next/link';
@@ -78,10 +77,11 @@ export default async function HomePage() {
           <div className="section-header">Manager Tools</div>
           <div className="grid grid-cols-2 gap-3">
             <ActionCard href="/products"          icon="🍬" title="Products"  desc="Manage catalog"  delay={0} />
-            <ActionCard href="/locations"         icon="📍" title="Locations" desc="Shelves & storage" delay={1} />
-            <ActionCard href="/dashboard"         icon="📊" title="Reports"   desc="Full dashboards" delay={2} />
-            <ActionCard href="/history"           icon="📜" title="History"   desc="Audit log"       delay={3} />
-            <ActionCard href="/dashboard/alerts"  icon="🔔" title="Alerts"    desc="Review issues"   delay={4} />
+            <ActionCard href="/vendors"           icon="🏭" title="Vendors"   desc="Manage suppliers" delay={1} />
+            <ActionCard href="/locations"         icon="📍" title="Locations" desc="Shelves & storage" delay={2} />
+            <ActionCard href="/dashboard"         icon="📊" title="Reports"   desc="Full dashboards" delay={3} />
+            <ActionCard href="/history"           icon="📜" title="History"   desc="Audit log"       delay={4} />
+            <ActionCard href="/dashboard/alerts"  icon="🔔" title="Alerts"    desc="Review issues"   delay={5} />
           </div>
         </>
       )}
@@ -113,4 +113,3 @@ function ActionCard({
     </Link>
   );
 }
-

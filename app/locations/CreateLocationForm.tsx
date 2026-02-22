@@ -16,14 +16,15 @@ export function CreateLocationForm({ storageLocations }: Props) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setSubmitting(true);
 
     try {
-      const formData = new FormData(e.currentTarget);
+      const formData = new FormData(form);
       await createLocation(formData);
       toast.success('Location created!');
       router.refresh();
-      e.currentTarget.reset();
+      form.reset();
     } catch (err: any) {
       toast.error('Failed', { description: err.message });
     } finally {

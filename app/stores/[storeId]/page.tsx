@@ -1,8 +1,11 @@
 import { prisma } from '@/lib/db';
+import { getAuthUser } from '@/lib/auth';
 import { getStoreBalance } from '@/actions/stores';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { StoreEditForm } from './StoreEditForm';
+import { StoreStatusButton } from './StoreStatusButton';
 
 export default async function StoreDetailPage({
   params,
@@ -14,6 +17,9 @@ export default async function StoreDetailPage({
   });
 
   if (!store) notFound();
+
+  const user = await getAuthUser();
+  const isManager = user.role === 'MANAGER';
 
   const balance = await getStoreBalance(store.id);
 
@@ -155,6 +161,23 @@ export default async function StoreDetailPage({
           </div>
         )}
       </Section>
+      {/* Manager: Edit & Deactivate */}
+      {isManager && (
+        <>
+          <StoreEditForm store={{
+            id: store.id,
+            name: store.name,
+            contactName: store.contactName,
+            contactPhone: store.contactPhone,
+            address: store.address,
+          }} />
+          <StoreStatusButton
+            storeId={store.id}
+            storeName={store.name}
+            isActive={store.isActive}
+          />
+        </>
+      )}
     </div>
   );
 }
