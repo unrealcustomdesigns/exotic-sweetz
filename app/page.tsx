@@ -1,10 +1,20 @@
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 export default async function HomePage() {
   const user = await getAuthUser();
   const isManager = user.role === 'MANAGER';
+
+  // Viewers go straight to their store dashboard
+  if (user.role === 'VIEWER') {
+    if (user.storeId) {
+      redirect(`/viewer/${user.storeId}`);
+    } else {
+      redirect('/viewer/no-store');
+    }
+  }
 
   const [productCount, storeCount, openAlerts] = await Promise.all([
     prisma.product.count({ where: { isActive: true } }),
@@ -90,17 +100,9 @@ export default async function HomePage() {
 }
 
 function ActionCard({
-  href,
-  icon,
-  title,
-  desc,
-  delay = 0,
+  href, icon, title, desc, delay = 0,
 }: {
-  href: string;
-  icon: string;
-  title: string;
-  desc: string;
-  delay?: number;
+  href: string; icon: string; title: string; desc: string; delay?: number;
 }) {
   const animClass = delay <= 4 ? `animate-slide-up-${Math.min(delay + 1, 4)}` : 'animate-slide-up';
   return (

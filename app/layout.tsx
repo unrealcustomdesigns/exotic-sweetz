@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Toaster } from 'sonner';
+import { BottomNav } from '@/components/BottomNav';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -46,27 +47,5 @@ export default function RootLayout({
         </body>
       </html>
     </ClerkProvider>
-  );
-}
-
-function BottomNav() {
-  return (
-    <nav className="bottom-nav">
-      <div className="mx-auto max-w-lg flex justify-around py-1.5">
-        <NavItem href="/" icon="🏠" label="Home" />
-        <NavItem href="/scan" icon="📷" label="Scan" />
-        <NavItem href="/stores" icon="🏪" label="Stores" />
-        <NavItem href="/dashboard" icon="📊" label="Reports" />
-      </div>
-    </nav>
-  );
-}
-
-function NavItem({ href, icon, label }: { href: string; icon: string; label: string }) {
-  return (
-    <a href={href} className="nav-item">
-      <span className="nav-icon">{icon}</span>
-      <span className="text-[10px] font-bold">{label}</span>
-    </a>
   );
 }

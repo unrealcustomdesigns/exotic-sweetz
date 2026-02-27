@@ -2,18 +2,25 @@ import { currentUser } from '@clerk/nextjs/server';
 
 export type AppRole = 'MANAGER' | 'STAFF' | 'VIEWER';
 
-export async function getAuthUser() {
+export type AuthUser = {
+  userId: string;
+  role: AppRole;
+  name: string;
+  storeId: string | null; // Viewers are assigned to a specific store
+};
+
+export async function getAuthUser(): Promise<AuthUser> {
   const user = await currentUser();
   if (!user) throw new Error('Not authenticated');
 
-  // Role is stored in Clerk public metadata
-  // Set via Clerk Dashboard or API: user.publicMetadata.role = "MANAGER"
   const role = (user.publicMetadata?.role as AppRole) || 'VIEWER';
+  const storeId = (user.publicMetadata?.storeId as string) || null;
 
   return {
     userId: user.id,
     role,
     name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.username || 'Unknown',
+    storeId,
   };
 }
 
